@@ -46,15 +46,27 @@ def main():
     server.bind(("0.0.0.0", port))
     server.listen(1)
 
-    # Dapatkan IP lokal
-    s_temp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Dapatkan semua IP yang tersedia
+    import subprocess
+    tailscale_ip = None
     try:
-        s_temp.connect(("8.8.8.8", 80))
-        local_ip = s_temp.getsockname()[0]
+        result = subprocess.run(["tailscale", "ip", "-4"], capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            tailscale_ip = result.stdout.strip()
     except Exception:
-        local_ip = "127.0.0.1"
-    finally:
-        s_temp.close()
+        pass
+
+    if tailscale_ip:
+        local_ip = tailscale_ip
+    else:
+        s_temp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s_temp.connect(("8.8.8.8", 80))
+            local_ip = s_temp.getsockname()[0]
+        except Exception:
+            local_ip = "127.0.0.1"
+        finally:
+            s_temp.close()
 
     log(1, f"\n[*] Menunggu koneksi di {local_ip}:{port} ...")
     log(2, f"[*] Beritahu sender untuk mengirim ke IP: {local_ip} Port: {port}")

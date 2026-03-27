@@ -103,10 +103,10 @@ def main():
     log(2, f"\n[6] Digital Signature (base64):\n    {signature_b64}")
 
     # ===== STEP 7: Build payload =====
-    # Get local IP
+    # Get local IP based on route to receiver (so Tailscale IP is detected correctly)
     s_temp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s_temp.connect(("8.8.8.8", 80))
+        s_temp.connect((receiver_ip, receiver_port))
         local_ip = s_temp.getsockname()[0]
     except Exception:
         local_ip = "127.0.0.1"
